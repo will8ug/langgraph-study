@@ -1,19 +1,12 @@
-[tool.poetry]
+[project]
 name = "langgraph-study"
 version = "0.1.0"
-description = ""
-authors = ["Will <yzj_000@163.com>"]
+description = "Add your description here"
 readme = "README.md"
-packages = [
-    { include = "app" }
+requires-python = ">=3.13"
+dependencies = [
+    "langchain-deepseek>=0.1.4",
+    "langchain-openai>=0.3.33",
+    "langgraph>=0.6.7",
+    "python-dotenv>=1.1.1",
 ]
-
-[tool.poetry.dependencies]
-python = "^3.9"
-langgraph = ">=0.5.1,<0.6.0"
-langchain-deepseek = "0.1.3"
-python-dotenv = ">=1.1.0,<1.2.0"
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
