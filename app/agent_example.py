@@ -34,9 +34,12 @@ input_message = {
 for step in agent.stream({"messages": [input_message]}, config, stream_mode="values"):
     step["messages"][-1].pretty_print()
 
+print("\n\n")
+
 input_message = {
     "role": "user",
     "content": "What's the weather where I live?"
 }
-for step in agent.stream({"messages": [input_message]}, config, stream_mode="values"):
-    step["messages"][-1].pretty_print()
+for step, metadata in agent.stream({"messages": [input_message]}, config, stream_mode="messages"):
+    if metadata["langgraph_node"] == "agent" and (text := step.text()):
+        print(text, end="", flush=True)
