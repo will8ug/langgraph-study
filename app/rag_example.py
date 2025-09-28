@@ -36,12 +36,17 @@ loader = WebBaseLoader(
 )
 docs = loader.load()
 
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=200,
+    add_start_index=True,
+)
 splitted_docs = text_splitter.split_documents(docs)
 print(f"Splitted doc length: {len(splitted_docs)}\n")
 
 vector_store = InMemoryVectorStore(embeddings)
-vector_store.add_documents(splitted_docs)
+doc_ids = vector_store.add_documents(splitted_docs)
+print(f"The first 3 Doc IDs: {doc_ids[:3]}\n")
 
 prompt = hub.pull("rlm/rag-prompt")
 print(prompt)
@@ -54,6 +59,7 @@ class State(TypedDict):
 
 def retrieve(state: State):
     retrieved_docs = vector_store.similarity_search(state["question"])
+    print(f"Retrieved docs length: {len(retrieved_docs)}\n")
     return {"context": retrieved_docs}
 
 def generate_answer(state: State):
@@ -66,5 +72,12 @@ graph_builder = StateGraph(State).add_sequence([retrieve, generate_answer])
 graph_builder.add_edge(START, "retrieve")
 graph = graph_builder.compile()
 
-response = graph.invoke({"question": "What is Task Decomposition?"})
-print(response["answer"])
+for step in graph.stream(
+    {"question": "What is Task Decomposition?"}, stream_mode="updates"
+):
+    print(f"{step}\n\n----------------\n\n")
+
+for message, metadata in graph.stream(
+    {"question": "What are the types of memory?"}, stream_mode="messages"
+):
+    print(message.content, end="|")
