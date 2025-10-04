@@ -10,6 +10,7 @@ from langchain_core.messages import SystemMessage
 from langchain_core.tools import tool
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langgraph import graph
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph, MessagesState
 from langgraph.prebuilt import ToolNode, tools_condition
 
@@ -114,16 +115,21 @@ graph_builder.add_conditional_edges(
 graph_builder.add_edge("tools", "generate_answer")
 graph_builder.add_edge("generate_answer", END)
 
-graph = graph_builder.compile()
+memory = MemorySaver()
+graph = graph_builder.compile(checkpointer=memory)
 
-input_message = "Hello"
-for step in graph.stream(
-    {"messages": [{"role": "user", "content": input_message}]}, stream_mode="values"
-):
-    step["messages"][-1].pretty_print()
+config = {"configurable": {"thread_id": "abc001"}}
+
+def chat(msg: str):
+    for step in graph.stream(
+        {"messages": [{"role": "user", "content": msg}]}, 
+        stream_mode="values",
+        config=config
+    ):
+        step["messages"][-1].pretty_print()
 
 input_message = "What is Task Decomposition?"
-for chunk, _ in graph.stream(
-    {"messages": [{"role": "user", "content": input_message}]}, stream_mode="messages"
-):
-    print(chunk.content, end="", flush=True)
+chat(input_message)
+
+input_message = "Can you look up some common ways of doing it?"
+chat(input_message)
